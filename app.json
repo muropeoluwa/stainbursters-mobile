@@ -28,6 +28,9 @@
     "plugins": [
       "expo-secure-store",
       "expo-splash-screen"
-    ]
+    ],
+    "cli": {
+      "appVersionSource": "remote"
+    }
   }
 }
