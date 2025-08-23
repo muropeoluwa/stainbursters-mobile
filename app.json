@@ -8,10 +8,11 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+  "image": "./assets/splash.png",
+  "resizeMode": "cover",
+  "backgroundColor": "#ffffff"
+},
+
     "ios": {
       "supportsTablet": true
     },
@@ -20,7 +21,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.muropeoluwa.stainburstersmobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,8 +31,10 @@
       "expo-secure-store",
       "expo-splash-screen"
     ],
-    "cli": {
-      "appVersionSource": "remote"
+    "extra": {
+      "eas": {
+        "projectId": "e68400d3-061c-4095-a652-629dc51728ef"
+      }
     }
   }
 }

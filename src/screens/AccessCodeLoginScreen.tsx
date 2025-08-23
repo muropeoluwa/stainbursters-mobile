@@ -1,5 +1,13 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  ImageBackground,
+} from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 
 const AccessCodeLoginScreen = () => {
@@ -71,30 +79,51 @@ const AccessCodeLoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login with Access Code</Text>
-      <TextInput
-        placeholder="Phone Number"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Access Code"
-        value={code}
-        onChangeText={setCode}
-        secureTextEntry
-        style={styles.input}
-      />
-      <Button title="Login" onPress={handleLogin} />
-    </View>
+    <ImageBackground
+      source={require('../../assets/login-bg.png')} // 👈 put your background image in assets
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <Text style={styles.title}>Login with Access Code</Text>
+        <TextInput
+          placeholder="Phone Number"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Access Code"
+          value={code}
+          onChangeText={setCode}
+          secureTextEntry
+          style={styles.input}
+        />
+        <Button title="Login" onPress={handleLogin} />
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  title: { fontSize: 22, marginBottom: 20, textAlign: 'center', fontWeight: 'bold' },
+  background: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(255,255,255,0.7)', // translucent overlay for readability
+  },
+  title: {
+    fontSize: 22,
+    marginBottom: 20,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#222',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',

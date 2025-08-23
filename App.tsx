@@ -5,8 +5,10 @@ import AppNavigator from "./navigation/AppNavigator";
 import { AuthProvider } from "./context/AuthContext";
 import * as SplashScreen from "expo-splash-screen";
 
-// Keep the splash screen visible while we load resources
-SplashScreen.preventAutoHideAsync();
+// Keep splash visible until we explicitly hide it
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* avoid warning if already hidden */
+});
 
 const App = () => {
   const [appIsReady, setAppIsReady] = useState(false);
@@ -14,10 +16,10 @@ const App = () => {
   useEffect(() => {
     async function prepare() {
       try {
-        // 👇 Load any resources here (fonts, API calls, etc.)
+        // Load fonts, assets, API bootstrap here if needed
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (e) {
-        console.warn(e);
+        console.warn("App prepare error:", e);
       } finally {
         setAppIsReady(true);
       }
@@ -28,13 +30,17 @@ const App = () => {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      // 👇 Hide the splash once the app is ready
-      await SplashScreen.hideAsync();
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.warn("Splash hide error:", e);
+      }
     }
   }, [appIsReady]);
 
   if (!appIsReady) {
-    return null; // ⏳ Keep showing splash until ready
+    // While not ready, don’t render anything: splash will stay visible
+    return null;
   }
 
   return (
