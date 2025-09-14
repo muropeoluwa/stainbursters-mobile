@@ -1,10 +1,11 @@
 // context/AuthContext.tsx
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CommonActions } from '@react-navigation/native';
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children, navigation }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState(null);
   const [role, setRole] = useState(null);
@@ -54,17 +55,19 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(true);
 
     try {
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('role', role);
-      await AsyncStorage.setItem('user_id', user_id.toString());
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.multiSet([
+        ['token', token],
+        ['role', role],
+        ['user_id', user_id.toString()],
+        ['user', JSON.stringify(user)],
+      ]);
       console.log('💾 Auth saved to storage');
     } catch (error) {
       console.error('⚠️ Error saving auth data:', error);
     }
   };
 
-  const logout = async () => {
+  const logout = async (navRef?: any) => {
     console.log('🚪 Logging out...');
     setToken(null);
     setRole(null);
@@ -73,8 +76,18 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(false);
 
     try {
-      await AsyncStorage.clear();
+      await AsyncStorage.multiRemove(['token', 'role', 'user_id', 'user']);
       console.log('🧹 Auth data cleared from storage');
+
+      // ✅ Reset navigation so user cannot go back into protected screens
+      if (navRef && navRef.dispatch) {
+        navRef.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          })
+        );
+      }
     } catch (error) {
       console.error('⚠️ Error clearing storage:', error);
     }

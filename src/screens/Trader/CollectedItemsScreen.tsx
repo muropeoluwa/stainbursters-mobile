@@ -30,7 +30,7 @@ interface WalkInOrder {
 }
 
 const CollectedItemsScreen = () => {
-  const { token } = useContext(AuthContext);
+  const { token, logout } = useContext(AuthContext);
   const [orders, setOrders] = useState<WalkInOrder[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<WalkInOrder[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,12 +47,22 @@ const CollectedItemsScreen = () => {
     setModalVisible(true);
   };
 
+  const handleSessionExpired = () => {
+    setModalVisible(false);
+    logout(); // force logout → navigates to login screen
+  };
+
   const fetchCollectedOrders = async () => {
     setLoading(true);
     try {
       const response = await fetch('https://stainbursters.name.ng/api/get_collected_walkins.php', {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (response.status === 401) {
+        showModal("Session expired, please login again.", handleSessionExpired);
+        return;
+      }
 
       const text = await response.text();
       let data;
@@ -67,7 +77,11 @@ const CollectedItemsScreen = () => {
         setOrders(data.orders);
         applyFilters(data.orders, searchQuery, dateFilter);
       } else {
-        showModal(data.message || "Something went wrong from backend.");
+        if (data.message?.toLowerCase().includes("session expired")) {
+          showModal("Session expired, please login again.", handleSessionExpired);
+        } else {
+          showModal(data.message || "Something went wrong from backend.");
+        }
       }
     } catch (error) {
       showModal("Network Error. Check your internet connection.");
@@ -115,106 +129,111 @@ const CollectedItemsScreen = () => {
   };
 
   const sendToRider = async (orderId: string) => {
-  showModal(
-    'Are you sure you want to send this order to the rider?',
-    async () => {
-      try {
-        const response = await fetch(
-          'https://stainbursters.name.ng/api/update_order_status.php',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              order_id: orderId,
-              status: 'pending', // 👈 clean payload
-            }),
-          }
-        );
-
-        // Handle raw response safely
-        const text = await response.text();
-        let data;
+    showModal(
+      'Are you sure you want to send this order to the rider?',
+      async () => {
         try {
-          data = JSON.parse(text);
-        } catch (e) {
-          console.error('Invalid JSON response:', text);
-          showModal('❌ Server error. Invalid response format.');
-          return;
-        }
+          const response = await fetch(
+            'https://stainbursters.name.ng/api/update_order_status.php',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                order_id: orderId,
+                status: 'pending',
+              }),
+            }
+          );
 
-        if (data.success) {
-          showModal('✅ Order sent to rider successfully');
-          fetchCollectedOrders(); // refresh orders
-        } else {
-          showModal(data.message || '❌ Failed to send to rider');
+          if (response.status === 401) {
+            showModal("Session expired, please login again.", handleSessionExpired);
+            return;
+          }
+
+          const text = await response.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            console.error('Invalid JSON response:', text);
+            showModal('❌ Server error. Invalid response format.');
+            return;
+          }
+
+          if (data.success) {
+            showModal('✅ Order sent to rider successfully');
+            fetchCollectedOrders(); // refresh orders
+          } else {
+            if (data.message?.toLowerCase().includes("session expired")) {
+              showModal("Session expired, please login again.", handleSessionExpired);
+            } else {
+              showModal(data.message || '❌ Failed to send to rider');
+            }
+          }
+        } catch (error) {
+          console.error('SendToRider Error:', error);
+          showModal('❌ Network Error. Could not send order.');
         }
-      } catch (error) {
-        console.error('SendToRider Error:', error);
-        showModal('❌ Network Error. Could not send order.');
       }
-    }
-  );
-};
-
-
+    );
+  };
 
   const calculateGrandTotal = () => {
     return filteredOrders.reduce((sum, order) => sum + parseFloat(order.total_amount || '0'), 0);
   };
 
   const renderItem = ({ item }: { item: WalkInOrder }) => {
-  let itemsList: any[] = [];
+    let itemsList: any[] = [];
 
-  if (item.items) {
-    if (Array.isArray(item.items)) {
-      itemsList = item.items;
-    } else if (typeof item.items === 'string') {
-      try {
-        itemsList = JSON.parse(item.items);
-      } catch (e) {
-        console.warn('Failed to parse items JSON', e);
-        itemsList = [];
+    if (item.items) {
+      if (Array.isArray(item.items)) {
+        itemsList = item.items;
+      } else if (typeof item.items === 'string') {
+        try {
+          itemsList = JSON.parse(item.items);
+        } catch (e) {
+          console.warn('Failed to parse items JSON', e);
+          itemsList = [];
+        }
       }
     }
-  }
 
-  const total = parseFloat(item.total_amount || '0');
-  const paid = parseFloat(item.amount_paid || '0');
-  const balance = total - paid;
-  const isFullyPaid = balance <= 0;
+    const total = parseFloat(item.total_amount || '0');
+    const paid = parseFloat(item.amount_paid || '0');
+    const balance = total - paid;
+    const isFullyPaid = balance <= 0;
 
-  return (
-    <View style={styles.card}>
-      <View style={styles.rowBetween}>
-        <Text style={styles.name}>{item.customer_name || 'Anonymous'}</Text>
-        <Text style={styles.badgeCollected}>🟡 Collected</Text>
+    return (
+      <View style={styles.card}>
+        <View style={styles.rowBetween}>
+          <Text style={styles.name}>{item.customer_name || 'Anonymous'}</Text>
+          <Text style={styles.badgeCollected}>🟡 Collected</Text>
+        </View>
+        <Text style={styles.label}>Phone: {item.customer_phone || 'N/A'}</Text>
+        <Text style={styles.label}>Items:</Text>
+        {itemsList.length > 0 ? (
+          itemsList.map((itm, idx) => (
+            <Text key={idx} style={styles.itemText}>
+              - {itm.type || itm.name || 'Item'} × {itm.quantity || 1} = ₦{itm.price || '0.00'}
+            </Text>
+          ))
+        ) : (
+          <Text style={styles.itemText}>No items listed</Text>
+        )}
+        <Text style={styles.label}>Total: ₦{total.toFixed(2)}</Text>
+        <Text style={styles.label}>
+          {isFullyPaid ? '✅ Fully Paid' : `Balance Due: ₦${balance.toFixed(2)}`}
+        </Text>
+        <Text style={styles.label}>Date: {new Date(item.created_at).toLocaleString()}</Text>
+        <TouchableOpacity style={styles.statusBtn} onPress={() => sendToRider(item.id)}>
+          <Text style={styles.statusText}>Send to Rider</Text>
+        </TouchableOpacity>
       </View>
-      <Text style={styles.label}>Phone: {item.customer_phone || 'N/A'}</Text>
-      <Text style={styles.label}>Items:</Text>
-      {itemsList.length > 0 ? (
-        itemsList.map((itm, idx) => (
-          <Text key={idx} style={styles.itemText}>
-            - {itm.type || itm.name || 'Item'} × {itm.quantity || 1} = ₦{itm.price || '0.00'}
-          </Text>
-        ))
-      ) : (
-        <Text style={styles.itemText}>No items listed</Text>
-      )}
-      <Text style={styles.label}>Total: ₦{total.toFixed(2)}</Text>
-      <Text style={styles.label}>
-        {isFullyPaid ? '✅ Fully Paid' : `Balance Due: ₦${balance.toFixed(2)}`}
-      </Text>
-      <Text style={styles.label}>Date: {new Date(item.created_at).toLocaleString()}</Text>
-      <TouchableOpacity style={styles.statusBtn} onPress={() => sendToRider(item.id)}>
-        <Text style={styles.statusText}>Send to Rider</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
+    );
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
