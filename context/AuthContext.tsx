@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
+import { useContext } from 'react';
 
 export const AuthContext = createContext();
 
@@ -93,7 +94,7 @@ export const AuthProvider = ({ children, navigation }) => {
     }
   };
 
-  return (
+    return (
     <AuthContext.Provider
       value={{
         isLoggedIn,
@@ -109,3 +110,5 @@ export const AuthProvider = ({ children, navigation }) => {
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

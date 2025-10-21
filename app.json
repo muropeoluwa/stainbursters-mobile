@@ -8,11 +8,10 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-  "image": "./assets/splash.png",
-  "resizeMode": "cover",
-  "backgroundColor": "#ffffff"
-},
-
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -29,7 +28,8 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {

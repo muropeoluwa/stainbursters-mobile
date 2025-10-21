@@ -1,0 +1,30 @@
+[1mdiff --git a/app.json b/app.json[m
+[1mindex 202c4e7..2bd74a2 100644[m
+[1m--- a/app.json[m
+[1m+++ b/app.json[m
+[36m@@ -13,9 +13,11 @@[m
+       "backgroundColor": "#ffffff"[m
+     },[m
+     "ios": {[m
+[31m-      "supportsTablet": true[m
+[32m+[m[32m      "supportsTablet": true,[m
+[32m+[m[32m      "bundleIdentifier": "ng.name.stainbursters.mobile"[m
+     },[m
+     "android": {[m
+[32m+[m[32m      "package": "ng.name.stainbursters.mobile",[m
+       "adaptiveIcon": {[m
+         "foregroundImage": "./assets/adaptive-icon.png",[m
+         "backgroundColor": "#ffffff"[m
+[36m@@ -27,6 +29,11 @@[m
+     },[m
+     "plugins": [[m
+       "expo-secure-store"[m
+[31m-    ][m
+[32m+[m[32m    ],[m
+[32m+[m[32m    "extra": {[m
+[32m+[m[32m      "eas": {[m
+[32m+[m[32m        "projectId": "e68400d3-061c-4095-a652-629dc51728ef"[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+   }[m
+ }[m
